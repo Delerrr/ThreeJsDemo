@@ -6,6 +6,7 @@ import * as THREE from "three";
 import * as dat from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 import { gsap } from "gsap";
 import { ref, onMounted, reactive } from "vue";
@@ -84,23 +85,50 @@ rgbLoader.load("./textures/sky.hdr", (texture) => {
   scene.environment = texture;
 });
 
-// 导入模型
-const fbxLoader = new FBXLoader();
-fbxLoader.load(
-  "./models/Demo.fbx",
-  (object) => {
-    object.position.set(0, 0, 0);
-    // 使得模型中的1米等于这里的1米
-    object.scale.multiplyScalar(scaleFactor);
-    models = object;
-    scene.add(object);
-  },
+// // 导入模型
+// const fbxLoader = new FBXLoader();
+// fbxLoader.load(
+//   "./models/Demo.fbx",
+//   (object) => {
+//     object.position.set(0, 0, 0);
+//     // 使得模型中的1米等于这里的1米
+//     object.scale.multiplyScalar(scaleFactor);
+//     models = object;
+//     scene.add(object);
+//   },
 
-  (xhr) => {
+//   (xhr) => {
+//     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+//   },
+//   (error) => {
+//     console.log(error);
+//   }
+// );
+// Instantiate a loader
+const loader = new GLTFLoader();
+
+// Load a glTF resource
+loader.load(
+  // resource URL
+  "models/Demo.glb",
+  // called when the resource is loaded
+  function (gltf) {
+    models = gltf.scene;
+    scene.add(gltf.scene);
+
+    // gltf.animations; // Array<THREE.AnimationClip>
+    // gltf.scene; // THREE.Group
+    // gltf.scenes; // Array<THREE.Group>
+    // gltf.cameras; // Array<THREE.Camera>
+    // gltf.asset; // Object
+  },
+  // called while loading is progressing
+  function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
   },
-  (error) => {
-    console.log(error);
+  // called when loading has errors
+  function (error) {
+    console.log("An error happened");
   }
 );
 
