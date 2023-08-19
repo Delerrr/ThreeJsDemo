@@ -18,8 +18,6 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 // 用于射线检测
 let models = null;
-// 导入模型后坐标放大了100倍,故缩回去
-let scaleFactor = 0.01;
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
 
@@ -65,12 +63,6 @@ const outlinePass = new OutlinePass(
   camera
 );
 composer.addPass(outlinePass);
-// const textureLoader = new THREE.TextureLoader();
-// textureLoader.load("textures/tri_pattern.jpg", function (texture) {
-//   outlinePass.patternTexture = texture;
-//   texture.wrapS = THREE.RepeatWrapping;
-//   texture.wrapT = THREE.RepeatWrapping;
-// });
 const outputPass = new OutputPass();
 composer.addPass(outputPass);
 
@@ -85,42 +77,16 @@ rgbLoader.load("./textures/sky.hdr", (texture) => {
   scene.environment = texture;
 });
 
-// // 导入模型
-// const fbxLoader = new FBXLoader();
-// fbxLoader.load(
-//   "./models/Demo.fbx",
-//   (object) => {
-//     object.position.set(0, 0, 0);
-//     // 使得模型中的1米等于这里的1米
-//     object.scale.multiplyScalar(scaleFactor);
-//     models = object;
-//     scene.add(object);
-//   },
-
-//   (xhr) => {
-//     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-//   },
-//   (error) => {
-//     console.log(error);
-//   }
-// );
-// Instantiate a loader
 const loader = new GLTFLoader();
 
-// Load a glTF resource
+//Load a glTF resource
 loader.load(
   // resource URL
-  "models/Demo.glb",
+  "models/substations.glb",
   // called when the resource is loaded
   function (gltf) {
     models = gltf.scene;
     scene.add(gltf.scene);
-
-    // gltf.animations; // Array<THREE.AnimationClip>
-    // gltf.scene; // THREE.Group
-    // gltf.scenes; // Array<THREE.Group>
-    // gltf.cameras; // Array<THREE.Camera>
-    // gltf.asset; // Object
   },
   // called while loading is progressing
   function (xhr) {
@@ -187,11 +153,11 @@ function clickOnBuilding(event) {
         ModelData.forEach((data) => {
           if (ob.name === data.name) {
             find = true;
+            pos = new THREE.Vector3(ob.position.x, ob.position.y, ob.position.z);
+            //pos.multiplyScalar(scaleFactor);
             // 轮廓线
             outlinePass.selectedObjects = [ob];
           }
-          pos = new THREE.Vector3(ob.position.x, ob.position.y, ob.position.z);
-          pos.multiplyScalar(scaleFactor);
         });
         ob = ob.parent;
       }
@@ -201,28 +167,111 @@ function clickOnBuilding(event) {
     }
     if (pos != null) {
       // 点击到了模型
-      let cameraPos = new THREE.Vector3(pos.x, pos.y + 1.5, pos.z + 2);
+      let cameraPos = new THREE.Vector3(pos.x, pos.y + 5, pos.z + 5);
       moveCamera(cameraPos, pos);
     }
   }
 }
-
 // 模型数据
 const ModelData = [
   {
-    name: "tower1",
+    name: "House1",
   },
   {
-    name: "tower2",
+    name: "House2",
   },
   {
-    name: "mainHouse",
+    name: "House3",
   },
   {
-    name: "smallHouse1",
+    name: "House4",
   },
   {
-    name: "smallHouse2",
+    name: "Transformer1",
+  },
+  {
+    name: "Transformer2",
+  },
+  {
+    name: "breaker1",
+  },
+  {
+    name: "breaker2",
+  },
+  {
+    name: "breaker3",
+  },
+  {
+    name: "breaker4",
+  },
+  {
+    name: "breaker5",
+  },
+  {
+    name: "breaker6",
+  },
+  {
+    name: "breaker7",
+  },
+  {
+    name: "breaker8",
+  },
+  {
+    name: "breaker9",
+  },
+  {
+    name: "breaker10",
+  },
+  {
+    name: "breaker11",
+  },
+  {
+    name: "breaker12",
+  },
+  {
+    name: "breaker13",
+  },
+  {
+    name: "breaker14",
+  },
+  {
+    name: "breaker15",
+  },
+  {
+    name: "breaker16",
+  },
+  {
+    name: "breaker17",
+  },
+  {
+    name: "breaker18",
+  },
+  {
+    name: "CT1",
+  },
+  {
+    name: "CT2",
+  },
+  {
+    name: "CT3",
+  },
+  {
+    name: "CT4",
+  },
+  {
+    name: "CT5",
+  },
+  {
+    name: "CT6",
+  },
+  {
+    name: "CT7",
+  },
+  {
+    name: "CT8",
+  },
+  {
+    name: "CT9",
   },
 ];
 
