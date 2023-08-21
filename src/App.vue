@@ -12,6 +12,10 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { WindShader } from "./shaders/windShader";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { MirrorShader } from "./shaders/MirrorShader";
+
 //import vShader from "./scripts/wind_vertex.glsl";
 //import fShader from "./scripts/wind.glsl";
 
@@ -40,23 +44,9 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 0, 10);
 scene.add(camera);
 
-// 风暴
-var tuniform = {
-  iTime: { value: 0.1 },
-  iMouse: { value: { x: 0, y: 0, z: 0 } },
-  iResolution: { value: { x: 1920, y: 1080, z: 0 } },
-};
-
-var mat = new THREE.ShaderMaterial({
-  uniforms: tuniform,
-  vertexShader: document.getElementById("vertexshader").textContent,
-  fragmentShader: document.getElementById("fragmentshader").textContent,
-  side: THREE.DoubleSide,
-});
-
-var tobject = new THREE.Mesh(new THREE.PlaneGeometry(70, 70, 1, 1), mat);
-tobject.position.y = 30;
-scene.add(tobject);
+// var tobject = new THREE.Mesh(new THREE.PlaneGeometry(100, 100, 1, 1), mat);
+// tobject.position.y = 30;
+//scene.add(tobject);
 //renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -71,6 +61,21 @@ const outlinePass = new OutlinePass(
   camera
 );
 composer.addPass(outlinePass);
+
+// 风暴
+var tuniform = {
+  iTime: { value: 0.1 },
+  tDiffuse: { value: null },
+};
+
+var mat = new THREE.ShaderMaterial({
+  uniforms: tuniform,
+  vertexShader: WindShader.vertexShader,
+  fragmentShader: WindShader.fragmentShader,
+  side: THREE.DoubleSide,
+});
+
+composer.addPass(new ShaderPass(mat));
 const outputPass = new OutputPass();
 composer.addPass(outputPass);
 
@@ -287,9 +292,7 @@ const ModelData = [
 function render() {
   // update the picking ray with the camera and pointer position
   controls.update(clock.getDelta());
-  tuniform.iTime.value += clock.getDelta() * 600;
-  tuniform.iResolution.value.y += clock.getDelta();
-  tuniform.iMouse.value = { x: mousePos.x, y: mousePos.y, z: 0, w: 0 };
+  tuniform.iTime.value += clock.getDelta() * 1000;
   composer.render();
   requestAnimationFrame(render);
 }
