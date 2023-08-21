@@ -99,7 +99,7 @@ const WindShader = {
     void main()
     {
         vec4 transparent = vec4(0,0,0,0);
-        vec4 smoke = vec4(0.513725, 0.98039, 0.90196,1);
+        vec4 smoke = vec4(0.996, 0.941, 0.792,1);
         
         vec4 res = mix(smoke, transparent, complexFBM(vUv));
         

@@ -13,17 +13,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { WindShader } from "./shaders/windShader";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { MirrorShader } from "./shaders/MirrorShader";
-
-//import vShader from "./scripts/wind_vertex.glsl";
-//import fShader from "./scripts/wind.glsl";
-
-let mousePos = { x: 0, y: 0 };
-document.onmousemove = (e) => {
-  mousePos.x = e.clientX;
-  mousePos.y = e.clientY;
-};
+import { WindPass } from "./shaders/WindPass";
 
 // 用于射线检测
 let models = null;
@@ -66,6 +56,7 @@ composer.addPass(outlinePass);
 var tuniform = {
   iTime: { value: 0.1 },
   tDiffuse: { value: null },
+  speed: { value: 3 },
 };
 
 var mat = new THREE.ShaderMaterial({
@@ -75,7 +66,9 @@ var mat = new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
 });
 
-composer.addPass(new ShaderPass(mat));
+const sprite = new THREE.Sprite(mat);
+scene.add(sprite);
+composer.addPass(new WindPass(mat));
 const outputPass = new OutputPass();
 composer.addPass(outputPass);
 
@@ -292,7 +285,6 @@ const ModelData = [
 function render() {
   // update the picking ray with the camera and pointer position
   controls.update(clock.getDelta());
-  tuniform.iTime.value += clock.getDelta() * 1000;
   composer.render();
   requestAnimationFrame(render);
 }
