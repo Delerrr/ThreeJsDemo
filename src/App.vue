@@ -3,18 +3,23 @@
 </template>
 <script setup>
 import * as THREE from "three";
-import * as dat from "dat.gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 import { gsap } from "gsap";
 import { ref, onMounted, reactive } from "vue";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+//import vShader from "./scripts/wind_vertex.glsl";
+//import fShader from "./scripts/wind.glsl";
+
+let mousePos = { x: 0, y: 0 };
+document.onmousemove = (e) => {
+  mousePos.x = e.clientX;
+  mousePos.y = e.clientY;
+};
 
 // 用于射线检测
 let models = null;
@@ -24,20 +29,6 @@ const clock = new THREE.Clock();
 // 坐标辅助线
 const axesHelper = new THREE.AxesHelper(1001);
 scene.add(axesHelper);
-
-//cube（调试用）
-// const cubeGeometry = new THREE.BoxGeometry();
-// const cubeMeterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-// const cube = new THREE.Mesh(cubeGeometry, cubeMeterial);
-// cube.scale.set(400, 400, 400);
-// scene.add(cube);
-// const gui = new dat.GUI();
-// gui.add(cube.position, "x").min(-1000);
-// gui.add(cube.position, "y").min(-1000);
-// gui.add(cube.position, "z").min(-1000);
-// gui.add(cube.scale, "x").min(-1000);
-// gui.add(cube.scale, "y").min(-1000);
-// gui.add(cube.scale, "z").min(-1000);
 
 // 相机
 const camera = new THREE.PerspectiveCamera(
@@ -49,6 +40,23 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 0, 10);
 scene.add(camera);
 
+// 风暴
+var tuniform = {
+  iTime: { value: 0.1 },
+  iMouse: { value: { x: 0, y: 0, z: 0 } },
+  iResolution: { value: { x: 1920, y: 1080, z: 0 } },
+};
+
+var mat = new THREE.ShaderMaterial({
+  uniforms: tuniform,
+  vertexShader: document.getElementById("vertexshader").textContent,
+  fragmentShader: document.getElementById("fragmentshader").textContent,
+  side: THREE.DoubleSide,
+});
+
+var tobject = new THREE.Mesh(new THREE.PlaneGeometry(70, 70, 1, 1), mat);
+tobject.position.y = 30;
+scene.add(tobject);
 //renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -167,7 +175,7 @@ function clickOnBuilding(event) {
     }
     if (pos != null) {
       // 点击到了模型
-      let cameraPos = new THREE.Vector3(pos.x, pos.y + 5, pos.z + 5);
+      let cameraPos = new THREE.Vector3(pos.x, pos.y + 20, pos.z + 20);
       moveCamera(cameraPos, pos);
     }
   }
@@ -279,6 +287,9 @@ const ModelData = [
 function render() {
   // update the picking ray with the camera and pointer position
   controls.update(clock.getDelta());
+  tuniform.iTime.value += clock.getDelta() * 600;
+  tuniform.iResolution.value.y += clock.getDelta();
+  tuniform.iMouse.value = { x: mousePos.x, y: mousePos.y, z: 0, w: 0 };
   composer.render();
   requestAnimationFrame(render);
 }
