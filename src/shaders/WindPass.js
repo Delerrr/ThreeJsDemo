@@ -4,9 +4,7 @@ class WindPass extends ShaderPass {
 	render(renderer, writeBuffer, readBuffer, deltaTime, /*maskActive */) {
 
 		if (this.uniforms[this.textureID]) {
-
 			this.uniforms[this.textureID].value = readBuffer.texture;
-
 		}
 
 		this.uniforms['iTime'].value += deltaTime * this.uniforms['speed'].value;
@@ -14,10 +12,8 @@ class WindPass extends ShaderPass {
 		this.fsQuad.material = this.material;
 
 		if (this.renderToScreen) {
-
 			renderer.setRenderTarget(null);
 			this.fsQuad.render(renderer);
-
 		} else {
 
 			renderer.setRenderTarget(writeBuffer);

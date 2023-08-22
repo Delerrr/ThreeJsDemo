@@ -2,6 +2,8 @@
  * Full-screen textured quad shader
  */
 
+import { Vector4 } from "three";
+
 const WindShader = {
 
     name: 'WindShader',
@@ -9,6 +11,7 @@ const WindShader = {
     uniforms: {
         'iTime': { value: 0.1 },
         'tDiffuse': { value: null },
+        'smokeColor': { value: new Vector4(0.2, 0.2, 0.2, 0) }
     },
 
     vertexShader: /* glsl */`
@@ -25,6 +28,7 @@ const WindShader = {
     uniform sampler2D tDiffuse;
     varying vec2 vUv;
     uniform float iTime;
+    uniform vec4 smokeColor;
 
     #define OCTAVES  8.0
     #define LIVE_SMOKE 1
@@ -99,10 +103,7 @@ const WindShader = {
     void main()
     {
         vec4 transparent = vec4(0,0,0,0);
-        vec4 smoke = vec4(0.996, 0.941, 0.792,1);
-        
-        vec4 res = mix(smoke, transparent, complexFBM(vUv));
-        
+        vec4 res = mix(smokeColor, transparent, complexFBM(vUv));
         vec4 texel = texture2D( tDiffuse, vUv );
         gl_FragColor = res + texel;
     }`

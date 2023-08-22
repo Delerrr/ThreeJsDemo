@@ -1,5 +1,8 @@
 <template>
-  <div id="container" @click="clickOnBuilding"></div>
+  <div id="container" @click="clickOnBuilding">
+    <button @click="BeginWind" class="windBtnL">BeginWind</button>
+    <button @click="EndWind" class="windBtnR">EndWind</button>
+  </div>
 </template>
 <script setup>
 import * as THREE from "three";
@@ -34,10 +37,6 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 0, 10);
 scene.add(camera);
 
-// var tobject = new THREE.Mesh(new THREE.PlaneGeometry(100, 100, 1, 1), mat);
-// tobject.position.y = 30;
-//scene.add(tobject);
-//renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -52,25 +51,39 @@ const outlinePass = new OutlinePass(
 );
 composer.addPass(outlinePass);
 
+const smokeColor = new THREE.Vector4(0.2, 0.2, 0.2, 0);
+
 // 风暴
+let windOn = false;
 var tuniform = {
   iTime: { value: 0.1 },
   tDiffuse: { value: null },
   speed: { value: 3 },
+  smokeColor: { value: smokeColor },
 };
 
 var mat = new THREE.ShaderMaterial({
   uniforms: tuniform,
   vertexShader: WindShader.vertexShader,
   fragmentShader: WindShader.fragmentShader,
-  side: THREE.DoubleSide,
 });
 
-const sprite = new THREE.Sprite(mat);
-scene.add(sprite);
-composer.addPass(new WindPass(mat));
+const windPass = new WindPass(mat);
 const outputPass = new OutputPass();
 composer.addPass(outputPass);
+
+// 大风开关
+function BeginWind() {
+  if (windOn) return;
+  composer.addPass(windPass);
+  windOn = true;
+}
+
+function EndWind() {
+  if (!windOn) return;
+  windOn = false;
+  composer.removePass(windPass);
+}
 
 // control
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -313,5 +326,20 @@ canvas {
 #container {
   width: 100%;
   height: 100%;
+}
+
+.windBtnL {
+  font-size: large;
+  position: absolute;
+  width: 400px;
+  height: 80px;
+}
+
+.windBtnR {
+  font-size: large;
+  position: absolute;
+  width: 400px;
+  height: 80px;
+  top: 90px;
 }
 </style>
