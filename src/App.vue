@@ -1,7 +1,7 @@
 <template>
   <div id="container" @click="clickOnBuilding">
-    <button @click="BeginWind" class="windBtnL">BeginWind</button>
-    <button @click="EndWind" class="windBtnR">EndWind</button>
+    <button @click="BeginWind" class="windBtnL">有风</button>
+    <button @click="EndWind" class="windBtnR">无风</button>
   </div>
 </template>
 <script setup>
@@ -17,7 +17,7 @@ import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { WindShader } from "./shaders/windShader";
 import { WindPass } from "./shaders/WindPass";
-
+import * as dat from "dat.gui";
 // 用于射线检测
 let models = null;
 const scene = new THREE.Scene();
@@ -51,21 +51,37 @@ const outlinePass = new OutlinePass(
 );
 composer.addPass(outlinePass);
 
-const smokeColor = new THREE.Vector4(0.2, 0.2, 0.2, 0);
+let smokeParams = JSON.parse(localStorage.getItem("smokeParams"));
+if (!smokeParams) {
+  smokeParams = { rgb: [100, 100, 100], a: 0.8, speed: 3 };
+}
+
+// 每三秒保存一次参数
+setInterval(() => {
+  localStorage.setItem("smokeParams", JSON.stringify(smokeParams));
+}, 3000);
 
 // 风暴
 let windOn = false;
 var tuniform = {
   iTime: { value: 0.1 },
   tDiffuse: { value: null },
-  speed: { value: 3 },
-  smokeColor: { value: smokeColor },
+  speed: { value: smokeParams.speed },
+  smokeColor: {
+    value: new THREE.Vector4(
+      (smokeParams.rgb[0] / 255) * smokeParams.a,
+      (smokeParams.rgb[1] / 255) * smokeParams.a,
+      (smokeParams.rgb[2] / 255) * smokeParams.a,
+      smokeParams.a
+    ),
+  },
 };
 
 var mat = new THREE.ShaderMaterial({
   uniforms: tuniform,
   vertexShader: WindShader.vertexShader,
   fragmentShader: WindShader.fragmentShader,
+  transparent: true,
 });
 
 const windPass = new WindPass(mat);
@@ -83,6 +99,25 @@ function EndWind() {
   if (!windOn) return;
   windOn = false;
   composer.removePass(windPass);
+}
+
+// 大风参数
+const gui = new dat.GUI();
+gui.addColor(smokeParams, "rgb").name("大风颜色").onChange(changeColor);
+gui.add(smokeParams, "a").name("大风透明度").min(0).max(1).onChange(changeColor);
+gui
+  .add(smokeParams, "speed")
+  .name("风速")
+  .min(0)
+  .onChange(() => (tuniform.speed.value = smokeParams.speed));
+
+function changeColor() {
+  tuniform.smokeColor.value = new THREE.Vector4(
+    (smokeParams.rgb[0] / 255) * smokeParams.a,
+    (smokeParams.rgb[1] / 255) * smokeParams.a,
+    (smokeParams.rgb[2] / 255) * smokeParams.a,
+    smokeParams.a
+  );
 }
 
 // control
@@ -331,15 +366,18 @@ canvas {
 .windBtnL {
   font-size: large;
   position: absolute;
-  width: 400px;
-  height: 80px;
+  right: 5px;
+  width: 200px;
+  height: 40px;
+  top: 120px;
 }
 
 .windBtnR {
   font-size: large;
   position: absolute;
-  width: 400px;
-  height: 80px;
-  top: 90px;
+  right: 5px;
+  width: 200px;
+  height: 40px;
+  top: 170px;
 }
 </style>
