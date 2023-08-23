@@ -8,7 +8,6 @@ class WindPass extends ShaderPass {
 		}
 
 		this.uniforms['iTime'].value += deltaTime * this.uniforms['speed'].value;
-
 		this.fsQuad.material = this.material;
 
 		if (this.renderToScreen) {

@@ -56,9 +56,17 @@ if (!smokeParams) {
   smokeParams = { rgb: [100, 100, 100], a: 0.8, speed: 3 };
 }
 
-// 每三秒保存一次参数
+// 大风淡入淡出(用亮度代替透明度)
+let windFadeTime = JSON.parse(localStorage.getItem("windFadeTime"));
+if (!windFadeTime) {
+  windFadeTime = 5;
+}
+let windFadeParams = { ...smokeParams, windFadeTime: windFadeTime };
+
+// 每3秒保存一次参数
 setInterval(() => {
   localStorage.setItem("smokeParams", JSON.stringify(smokeParams));
+  localStorage.setItem("windFadeTime", JSON.stringify(windFadeParams.windFadeTime));
 }, 3000);
 
 // 风暴
@@ -81,7 +89,6 @@ var mat = new THREE.ShaderMaterial({
   uniforms: tuniform,
   vertexShader: WindShader.vertexShader,
   fragmentShader: WindShader.fragmentShader,
-  transparent: true,
 });
 
 const windPass = new WindPass(mat);
@@ -91,32 +98,59 @@ composer.addPass(outputPass);
 // 大风开关
 function BeginWind() {
   if (windOn) return;
-  composer.addPass(windPass);
   windOn = true;
+  composer.addPass(windPass);
+  windFadeParams.a = 0;
+  changeColor(windFadeParams);
+  var interval = setInterval(() => {
+    if (windFadeParams.a >= smokeParams.a) {
+      clearInterval(interval);
+    }
+    windFadeParams.a += (100 / 1000 / windFadeParams.windFadeTime) * smokeParams.a;
+    changeColor(windFadeParams);
+  }, 100);
 }
 
 function EndWind() {
   if (!windOn) return;
   windOn = false;
-  composer.removePass(windPass);
+  windFadeParams.a = smokeParams.a;
+  changeColor(windFadeParams);
+  var interval = setInterval(() => {
+    if (windFadeParams.a <= 0) {
+      composer.removePass(windPass);
+      clearInterval(interval);
+    }
+    windFadeParams.a -= (100 / 1000 / windFadeParams.windFadeTime) * smokeParams.a;
+    changeColor(windFadeParams);
+  }, 100);
 }
 
 // 大风参数
 const gui = new dat.GUI();
-gui.addColor(smokeParams, "rgb").name("大风颜色").onChange(changeColor);
-gui.add(smokeParams, "a").name("大风透明度").min(0).max(1).onChange(changeColor);
+gui
+  .addColor(smokeParams, "rgb")
+  .name("大风颜色")
+  .onChange(() => changeColor(smokeParams));
+gui
+  .add(smokeParams, "a")
+  .name("大风透明度")
+  .min(0)
+  .max(1)
+  .onChange(() => changeColor(smokeParams));
 gui
   .add(smokeParams, "speed")
   .name("风速")
   .min(0)
   .onChange(() => (tuniform.speed.value = smokeParams.speed));
+gui.add(windFadeParams, "windFadeTime").min(0).name("淡入淡出时间");
 
-function changeColor() {
+function changeColor(params) {
   tuniform.smokeColor.value = new THREE.Vector4(
-    (smokeParams.rgb[0] / 255) * smokeParams.a,
-    (smokeParams.rgb[1] / 255) * smokeParams.a,
-    (smokeParams.rgb[2] / 255) * smokeParams.a,
-    smokeParams.a
+    (params.rgb[0] / 255) * params.a,
+    (params.rgb[1] / 255) * params.a,
+    (params.rgb[2] / 255) * params.a,
+    params.a
   );
 }
 
@@ -369,7 +403,7 @@ canvas {
   right: 5px;
   width: 200px;
   height: 40px;
-  top: 120px;
+  top: 140px;
 }
 
 .windBtnR {
@@ -378,6 +412,6 @@ canvas {
   right: 5px;
   width: 200px;
   height: 40px;
-  top: 170px;
+  top: 190px;
 }
 </style>
